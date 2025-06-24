@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:groceries_store_app/data/dummy_items.dart';
 import 'package:groceries_store_app/models/grocery_item.dart';
 import 'package:groceries_store_app/widgets/new_item.dart';
+import 'package:http/http.dart' as http;
 
 class GroceriesList extends StatefulWidget {
   const GroceriesList({super.key});
@@ -13,17 +13,27 @@ class GroceriesList extends StatefulWidget {
 class _GroceriesListState extends State<GroceriesList> {
   final List<GroceryItem> _groceryItems = [];
 
+  @override
+  void initState() {
+    super.initState();
+    _loadItem();
+  }
+
+  void _loadItem() async {
+    final url = Uri.https(
+      'flutter-prep-a4eee-default-rtdb.firebaseio.com',
+      'shopping-list.json',
+    );
+    final reponse = await http.get(url);
+    print(reponse.body);
+  }
+
   _addItem(BuildContext context, List<GroceryItem> _groceries) async {
-    final newItem = await Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const NewItem()),
     );
-    if (newItem == null) {
-      return;
-    }
-    setState(() {
-      _groceryItems.add(newItem);
-    });
+    _loadItem();
   }
 
   void _removeItem(GroceryItem item) {
@@ -43,6 +53,7 @@ class _GroceriesListState extends State<GroceriesList> {
               onDismissed: (direction) {
                 _removeItem(_groceryItems[index]);
               },
+
               key: ValueKey(_groceryItems[index].id),
               child: ListTile(
                 leading: Container(
@@ -55,8 +66,6 @@ class _GroceriesListState extends State<GroceriesList> {
               ),
             ),
       );
-    } else {
-      content = const Center(child: Text('No items added yet.'));
     }
     return Scaffold(
       appBar: AppBar(
